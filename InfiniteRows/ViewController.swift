@@ -10,61 +10,43 @@ import UIKit
 
 class ViewController: UITableViewController {
     
-    var array = (0..<50).map { String($0) }
+    private var array = (0..<40).map { String($0) }
+
+    private var canLoadMore: Bool {
+        return array.count < 60
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupInfiniteScrollViewHandler()
+        tableView.tableFooterView = UIView()
+    }
+
+    private func setupInfiniteScrollViewHandler() {
         tableView.addInfiniteScrollingWithActionHandler { [weak self] in
-            for _ in 0..<3 {
-                self?.addMoreData()
+            guard let strongSelf = self else {
+                return
             }
-            self?.tableView.reloadData()
+            if strongSelf.canLoadMore {
+                strongSelf.tableView.infiniteScrollView?.startAnimating()
+                strongSelf.addMoreData() { data in
+                    strongSelf.array += data
+                    strongSelf.tableView.infiniteScrollView?.stopAnimating()
+                    DispatchQueue.main.async {
+                        strongSelf.tableView.reloadData()
+                    }
+                }
+            }
         }
     }
 
-    private func addMoreData() {
-        array += Array(repeating: "", count: 10)
+    private func addMoreData(completion: @escaping ([String]) -> Void) {
+        DispatchQueue.global().async {
+            sleep(2)
+            completion(Array(repeating: "", count: 10))
+        }
     }
-    
 }
-
-//private func setupInfiniteScrolling() {
-//    tableView.addInfiniteScrolling { [weak self] in
-//        guard let strongSelf = self else {
-//            return
-//        }
-//        if strongSelf.dataSource.canFetchMorePurchaseOptions {
-//            let numberOfPurchaseOptionsInDataSource = strongSelf.dataSource.purchaseOptions.count
-//            strongSelf.dataSource.fetchNextSetOfPurchaseOptions { [weak self] error in
-//                if self?.dataSource.purchaseOptions.count != numberOfPurchaseOptionsInDataSource {
-//                    self?.tableView.reloadData()
-//                    self?.tableView.infiniteScrollingView?.stopAnimating()
-//
-//                    if error != nil {
-//                        self?.presentAPIFailureAlert()
-//                    }
-//                    else {
-//                        self?.tableView.infiniteScrollingView?.stopAnimating()
-//                    }
-//                }
-//            }
-//        }
-//    }
-//
-//    tableView.mb_showCustomLoadingView()
-//    dataSource.fetchNextSetOfPurchaseOptions { [weak self] error in
-//        guard let strongSelf = self else {
-//            return
-//        }
-//        strongSelf.tableView.reloadData()
-//        strongSelf.tableView.mb_hideCustomLoadingView()
-//        if error != nil {
-//            strongSelf.navigationController?.popViewController(animated: true)
-//            strongSelf.presentAPIFailureAlert()
-//        }
-//    }
-//}
-
 
 extension ViewController {
     override func numberOfSections(in tableView: UITableView) -> Int {
