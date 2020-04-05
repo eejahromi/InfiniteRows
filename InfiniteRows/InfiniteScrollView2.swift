@@ -235,12 +235,13 @@ class InfiniteScrollView: UIView {
         let viewBounds = activityIndicatorView.bounds
         let origin = CGPoint(x: round((bounds.size.width - viewBounds.size.width)/2),
                              y: round((bounds.size.height - viewBounds.size.height)/2))
-        activityIndicatorView.frame = CGRect(x: origin.x, y: origin.y, width: viewBounds.size.width, height: viewBounds.size.height)
+        let yCoordinate = scrollView?.contentSize.height ?? 0.0
+        activityIndicatorView.frame = CGRect(x: origin.x, y: yCoordinate, width: viewBounds.size.width, height: viewBounds.size.height)
         switch updatedValue {
         case .stopped:
-            activityIndicatorView.stopAnimating()
+            self.activityIndicatorView.stopAnimating()
         case .loading:
-            activityIndicatorView.startAnimating()
+            self.activityIndicatorView.startAnimating()
         default:
             break
         }
