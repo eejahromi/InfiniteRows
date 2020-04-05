@@ -37,6 +37,9 @@ class ViewController: UITableViewController {
                     }
                 }
             }
+            else {
+                strongSelf.tableView.infiniteScrollView?.stopAnimating()
+            }
         }
     }
 
