@@ -110,6 +110,7 @@ class InfiniteScrollView: UIView {
 
     override init(frame: CGRect) {
         super.init(frame: frame)
+        activityIndicatorView.stopAnimating()
         autoresizingMask = .flexibleWidth
     }
 
@@ -206,7 +207,7 @@ class InfiniteScrollView: UIView {
             let contentHeight = scrollView.contentSize.height
             let offsetThreshold = contentHeight - scrollView.bounds.size.height
 
-            if scrollView.isDragging && state == .triggered {
+            if !scrollView.isDragging && state == .triggered {
                 DispatchQueue.main.async {
                     self.updateState(updatedValue: .loading)
                 }
