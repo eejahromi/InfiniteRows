@@ -9,21 +9,17 @@
 import UIKit
 import ObjectiveC.runtime
 
-
-
 private var UIScrollViewInfiniteScrollView: Void?
 
 extension UIScrollView {
-    //@property (nonatomic, assign) BOOL showsInfiniteScrolling;
     var infiniteScrollView: InfiniteScrollView? {
         get {
-            let view = objc_getAssociatedObject(self, &UIScrollViewInfiniteScrollView)
-            return view as? InfiniteScrollView
+            return objc_getAssociatedObject(self, &UIScrollViewInfiniteScrollView) as? InfiniteScrollView
         }
         set {
-            willChangeValue(forKey: "UIScrollViewInfiniteScrollView")
+            willChangeValue(forKey: ObserverConstants.uiScrollViewInfiniteScrollView.rawValue)
             objc_setAssociatedObject(self, &UIScrollViewInfiniteScrollView, newValue, .OBJC_ASSOCIATION_ASSIGN)
-            didChangeValue(forKey: "UIScrollViewInfiniteScrollView")
+            didChangeValue(forKey: ObserverConstants.uiScrollViewInfiniteScrollView.rawValue)
         }
     }
 
