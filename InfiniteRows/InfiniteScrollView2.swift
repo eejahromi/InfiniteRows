@@ -48,22 +48,22 @@ extension UIScrollView {
             return infiniteScrollView?.isHidden == false
         }
         set {
-            guard let scrollView  = infiniteScrollView else {
+            guard let scrollView = infiniteScrollView else {
                 return
             }
             infiniteScrollView?.isHidden = !showsInfiniteScrolling
             if showsInfiniteScrolling == false {
                 if scrollView.isObserving == true {
-                    removeObserver(scrollView, forKeyPath: "contentOffset")
-                    removeObserver(scrollView, forKeyPath: "contentSize")
+                    removeObserver(scrollView, forKeyPath: ObserverConstants.contentOffset.rawValue)
+                    removeObserver(scrollView, forKeyPath: ObserverConstants.contentSize.rawValue)
                     scrollView.resetScrollViewContentInset()
                     scrollView.isObserving = false
                 }
             }
             else {
                 if scrollView.isObserving == false {
-                    addObserver(scrollView, forKeyPath: "contentOffset", options: .new, context: nil)
-                    addObserver(scrollView, forKeyPath: "contentSize", options: .new, context: nil)
+                    addObserver(scrollView, forKeyPath: ObserverConstants.contentOffset.rawValue, options: .new, context: nil)
+                    addObserver(scrollView, forKeyPath: ObserverConstants.contentSize.rawValue, options: .new, context: nil)
                     scrollView.scrollViewContentInsetForInfiniteScrolling()
                     scrollView.isObserving = true
 
@@ -82,22 +82,29 @@ enum InfiniteScrollState {
     case all
 }
 
-class InfiniteScrollView: UIView {
-    var activityIndicatorStyle: UIActivityIndicatorView.Style = .gray
-    var state: InfiniteScrollState = .stopped
-    var sectionHeight: Int?
-    var enabled = true
+enum ObserverConstants: String {
+    case contentSize
+    case contentOffset
+    case uiScrollViewInfiniteScrollView
+}
 
-    var infiniteScrollingHandler: (() -> Void)?
-    var activityIndicatorView: UIActivityIndicatorView = {
-        let indicatorView = UIActivityIndicatorView(style: .gray)
-        indicatorView.hidesWhenStopped = true
-        return indicatorView
-    }()
+class InfiniteScrollView: UIView {
+    var enabled = true
+    var isObserving = false
     weak var scrollView: UIScrollView?
     var originalBottomInset: CGFloat = 0.0
-    var wasTriggeredByUser = false
-    var isObserving = false
+    var infiniteScrollingHandler: (() -> Void)?
+
+    lazy private var activityIndicatorView: UIActivityIndicatorView = {
+        let indicatorView = UIActivityIndicatorView(style: .gray)
+        indicatorView.hidesWhenStopped = true
+        addSubview(indicatorView)
+        return indicatorView
+    }()
+
+    private var state: InfiniteScrollState = .stopped
+
+    // MARK: - Inits
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -161,14 +168,16 @@ class InfiniteScrollView: UIView {
         })
     }
 
+    // MARK: - Observers
+
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         guard let keyPath = keyPath, let contentOffset: CGPoint = change?[.newKey] as? CGPoint else {
             return
         }
-        if keyPath == "contentOffset" && enabled == true {
+        if keyPath == ObserverConstants.contentOffset.rawValue && enabled == true {
             scrollViewDidScroll(contentOffset: contentOffset)
         }
-        else if keyPath == "contentSize" {
+        else if keyPath == ObserverConstants.contentSize.rawValue {
             layoutSubviews()
             frame = CGRect(x: 0.0, y: scrollView?.contentSize.height ?? 0.0, width: bounds.size.width, height: 60.0)
         }
