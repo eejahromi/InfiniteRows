@@ -39,8 +39,10 @@ extension UIScrollView {
     }
 
     func triggerInfiniteScrolling() {
-        infiniteScrollView?.updateState(updatedValue: .triggered)
-        infiniteScrollView?.startAnimating()
+        DispatchQueue.main.async {
+            self.infiniteScrollView?.updateState(updatedValue: .triggered)
+            self.infiniteScrollView?.startAnimating()
+        }
     }
 
     var showsInfiniteScrolling: Bool {
@@ -116,26 +118,36 @@ class InfiniteScrollView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    // MARK: - Public functions
+
     func triggerRefresh() {
-        updateState(updatedValue: .triggered)
-        updateState(updatedValue: .loading)
+        DispatchQueue.main.async {
+            self.updateState(updatedValue: .triggered)
+            self.updateState(updatedValue: .loading)
+        }
     }
 
     func startAnimating() {
-        updateState(updatedValue: .loading)
+        DispatchQueue.main.async {
+            self.updateState(updatedValue: .loading)
+        }
     }
 
     func stopAnimating() {
-        updateState(updatedValue: .stopped)
+        DispatchQueue.main.async {
+            self.updateState(updatedValue: .stopped)
+        }
     }
+
+    // MARK: - View functions
 
     override func willMove(toSuperview newSuperview: UIView?) {
         if superview != nil && newSuperview == nil {
             if let scrollView = superview as? UIScrollView {
                 if scrollView.showsInfiniteScrolling {
                     if isObserving {
-                        scrollView.removeObserver(self, forKeyPath: "contentOffset")
-                        scrollView.removeObserver(self, forKeyPath: "contentSize")
+                        scrollView.removeObserver(self, forKeyPath: ObserverConstants.contentOffset.rawValue)
+                        scrollView.removeObserver(self, forKeyPath: ObserverConstants.contentSize.rawValue)
                         isObserving = false
                     }
                 }
@@ -146,6 +158,8 @@ class InfiniteScrollView: UIView {
     override func layoutSubviews() {
         activityIndicatorView.center = CGPoint(x: bounds.size.width/2, y: bounds.size.height/2)
     }
+
+    // MARK: - ScrollView Insets
 
     func resetScrollViewContentInset() {
         var currentInsets = scrollView?.contentInset
@@ -193,16 +207,24 @@ class InfiniteScrollView: UIView {
             let offsetThreshold = contentHeight - scrollView.bounds.size.height
 
             if scrollView.isDragging && state == .triggered {
-                updateState(updatedValue: .loading)
+                DispatchQueue.main.async {
+                    self.updateState(updatedValue: .loading)
+                }
             }
             else if contentOffset.y > offsetThreshold && contentOffset.y > 0 && state == .stopped && scrollView.isDragging {
-                updateState(updatedValue: .triggered)
+                DispatchQueue.main.async {
+                    self.updateState(updatedValue: .triggered)
+                }
             }
             else if contentOffset.y < offsetThreshold && state != .stopped {
-                updateState(updatedValue: .stopped)
+                DispatchQueue.main.async {
+                    self.updateState(updatedValue: .stopped)
+                }
             }
         }
     }
+
+    // MARK: - Helpers
 
     func updateState(updatedValue: InfiniteScrollState) {
         if updatedValue == state {
