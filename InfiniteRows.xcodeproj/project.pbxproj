@@ -12,10 +12,7 @@
 		9B5CD99A24304EE400CA6586 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9B5CD99824304EE400CA6586 /* Main.storyboard */; };
 		9B5CD99C24304EE600CA6586 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9B5CD99B24304EE600CA6586 /* Assets.xcassets */; };
 		9B5CD99F24304EE600CA6586 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9B5CD99D24304EE600CA6586 /* LaunchScreen.storyboard */; };
-		9B5CD9A724304EFD00CA6586 /* InfiniteScrollView2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B5CD9A624304EFD00CA6586 /* InfiniteScrollView2.swift */; };
-		9B5CD9A92430585200CA6586 /* Person.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B5CD9A82430585200CA6586 /* Person.swift */; };
-		9B5CD9AB2430FC5700CA6586 /* InfiniteScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B5CD9AA2430FC5700CA6586 /* InfiniteScrollView.swift */; };
-		9B5CD9AF24311CC300CA6586 /* UIScrollView+SVInfiniteScrolling.m in Sources */ = {isa = PBXBuildFile; fileRef = 9B5CD9AE24311CC300CA6586 /* UIScrollView+SVInfiniteScrolling.m */; };
+		9B5CD9A724304EFD00CA6586 /* InfiniteScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B5CD9A624304EFD00CA6586 /* InfiniteScrollView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,12 +23,7 @@
 		9B5CD99B24304EE600CA6586 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		9B5CD99E24304EE600CA6586 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		9B5CD9A024304EE600CA6586 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		9B5CD9A624304EFD00CA6586 /* InfiniteScrollView2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfiniteScrollView2.swift; sourceTree = "<group>"; };
-		9B5CD9A82430585200CA6586 /* Person.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Person.swift; sourceTree = "<group>"; };
-		9B5CD9AA2430FC5700CA6586 /* InfiniteScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfiniteScrollView.swift; sourceTree = "<group>"; };
-		9B5CD9AC24311CC200CA6586 /* InfiniteRows-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "InfiniteRows-Bridging-Header.h"; sourceTree = "<group>"; };
-		9B5CD9AD24311CC300CA6586 /* UIScrollView+SVInfiniteScrolling.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIScrollView+SVInfiniteScrolling.h"; sourceTree = "<group>"; };
-		9B5CD9AE24311CC300CA6586 /* UIScrollView+SVInfiniteScrolling.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIScrollView+SVInfiniteScrolling.m"; sourceTree = "<group>"; };
+		9B5CD9A624304EFD00CA6586 /* InfiniteScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfiniteScrollView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -65,17 +57,12 @@
 			isa = PBXGroup;
 			children = (
 				9B5CD99424304EE400CA6586 /* AppDelegate.swift */,
-				9B5CD9A82430585200CA6586 /* Person.swift */,
-				9B5CD9A624304EFD00CA6586 /* InfiniteScrollView2.swift */,
-				9B5CD9AA2430FC5700CA6586 /* InfiniteScrollView.swift */,
-				9B5CD9AD24311CC300CA6586 /* UIScrollView+SVInfiniteScrolling.h */,
-				9B5CD9AE24311CC300CA6586 /* UIScrollView+SVInfiniteScrolling.m */,
+				9B5CD9A624304EFD00CA6586 /* InfiniteScrollView.swift */,
 				9B5CD99624304EE400CA6586 /* ViewController.swift */,
 				9B5CD99824304EE400CA6586 /* Main.storyboard */,
 				9B5CD99B24304EE600CA6586 /* Assets.xcassets */,
 				9B5CD99D24304EE600CA6586 /* LaunchScreen.storyboard */,
 				9B5CD9A024304EE600CA6586 /* Info.plist */,
-				9B5CD9AC24311CC200CA6586 /* InfiniteRows-Bridging-Header.h */,
 			);
 			path = InfiniteRows;
 			sourceTree = "<group>";
@@ -152,11 +139,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9B5CD9A724304EFD00CA6586 /* InfiniteScrollView2.swift in Sources */,
+				9B5CD9A724304EFD00CA6586 /* InfiniteScrollView.swift in Sources */,
 				9B5CD99724304EE400CA6586 /* ViewController.swift in Sources */,
-				9B5CD9AF24311CC300CA6586 /* UIScrollView+SVInfiniteScrolling.m in Sources */,
-				9B5CD9AB2430FC5700CA6586 /* InfiniteScrollView.swift in Sources */,
-				9B5CD9A92430585200CA6586 /* Person.swift in Sources */,
 				9B5CD99524304EE400CA6586 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

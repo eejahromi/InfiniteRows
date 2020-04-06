@@ -1,262 +1,265 @@
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
 //
-//  InfiniteScrollView.swift
-//  InfiniteRows
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
 //
-//  Created by Ehsan Jahromi on 3/29/20.
-//  Copyright © 2020 Ehsan Jahromi. All rights reserved.
-//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 
 import UIKit
+import ObjectiveC.runtime
 
-/*
+private var UIScrollViewInfiniteScrollView: Void?
 
-let infiniteScrollAnimationDuration: TimeInterval = 0.35
-
-private var infiniteScrollStateKey: UInt8 = 0
 extension UIScrollView {
-    var infiniteScrollState: InfiniteScrollState {
+    var infiniteScrollView: InfiniteScrollView? {
         get {
-            return associatedObject(base: self, key: &infiniteScrollStateKey) { return InfiniteScrollState() }
+            return objc_getAssociatedObject(self, &UIScrollViewInfiniteScrollView) as? InfiniteScrollView
         }
-        set { associateObject(base: self, key: &infiniteScrollStateKey, value: newValue) }
+        set {
+            willChangeValue(forKey: ObserverConstants.uiScrollViewInfiniteScrollView.rawValue)
+            objc_setAssociatedObject(self, &UIScrollViewInfiniteScrollView, newValue, .OBJC_ASSOCIATION_ASSIGN)
+            didChangeValue(forKey: ObserverConstants.uiScrollViewInfiniteScrollView.rawValue)
+        }
     }
-}
 
-extension UIScrollView {        //Public methods
-    func isAnimatingInfiniteScroll() -> Bool {
-        return infiniteScrollState.loading
-    }
-    func addInfiniteScrollWithHandler(handler: @escaping (UIScrollView)->()) {
-        infiniteScrollState.infiniteScrollHandler = handler
-        
-        guard !infiniteScrollState.initialized else { return }
-        
-        panGestureRecognizer.addTarget(self, action: #selector(UIScrollView.infiniteScrollHandlePanGesture(panGR:)))
-        infiniteScrollState.initialized = true
-    }
-    func removeInfiniteScroll() {
-        guard infiniteScrollState.initialized else { return }
-        
-        panGestureRecognizer.removeTarget(self, action: #selector(UIScrollView.infiniteScrollHandlePanGesture(panGR:)))
-        infiniteScrollState.indicatorView?.removeFromSuperview()
-        infiniteScrollState.indicatorView = nil
-        infiniteScrollState.initialized = false
-    }
-    func finishInfiniteScroll() {
-        finishInfiniteScrollWithCompletion(handler: nil)
-    }
-    func finishInfiniteScrollWithCompletion(handler: InfiniteScrollHandler?) {
-        if infiniteScrollState.loading {
-            stopAnimatingInfiniteScrollWithCompletion(handler: handler)
+    func addInfiniteScrollingWithActionHandler(handler: @escaping () -> Void) {
+        if infiniteScrollView == nil {
+            let view = InfiniteScrollView(frame: CGRect(x: 0,
+                                                        y: contentSize.height,
+                                                        width: bounds.size.width,
+                                                        height: 60))
+            view.infiniteScrollingHandler = handler
+            view.scrollView = self
+            addSubview(view)
+            view.originalBottomInset = contentInset.bottom
+            infiniteScrollView = view
+            showsInfiniteScrolling = true
         }
     }
-    func setInfiniteScrollIndicatorStyle(style: UIActivityIndicatorView.Style) {
-        infiniteScrollState.indicatorStyle = style
-        //        if infiniteScrollState.indicatorView is UIActivityIndicatorView {
-        infiniteScrollState.indicatorView?.style = style
-        //        }
-    }
-    func infiniteScrollIndicatorStyle() -> UIActivityIndicatorView.Style {
-        return infiniteScrollState.indicatorStyle
-    }
-    func setInfiniteScrollIndicatorView(indicatorView: UIActivityIndicatorView) {
-        indicatorView.isHidden = true
-        infiniteScrollState.indicatorView = indicatorView
-    }
-    func infiniteScrollIndicatorView() -> UIActivityIndicatorView? {
-        return infiniteScrollState.indicatorView
-    }
-    func setInfiniteScrollIndicatorMargin(margin: Double) {
-        infiniteScrollState.indicatorMargin = margin
-    }
-    func infiniteScrollIndicatorMargin() -> Double {
-        return infiniteScrollState.indicatorMargin
-    }
-}
 
-extension UIScrollView {        //Private methods
-//    override public class func initialize() {
-//        struct Static { static var token: dispatch_once_t = 0; }
-//        dispatch_once(&Static.token) {
-//            let originalOffsetMethod = class_getInstanceMethod(self, Selector("setContentOffset:"));
-//            let swizzledOffsetMethod = class_getInstanceMethod(self, #selector(UIScrollView.infiniteScrollSetContentOffset(_:)));
-//            method_exchangeImplementations(originalOffsetMethod, swizzledOffsetMethod);
-//
-//            let originalSizeMethod = class_getInstanceMethod(self, Selector("setContentSize:"));
-//            let swizzledSizeMethod = class_getInstanceMethod(self, #selector(UIScrollView.infiniteScrollSetContentSize(_:)));
-//            method_exchangeImplementations(originalSizeMethod, swizzledSizeMethod);
-//        }
-//    }
-    @objc private func infiniteScrollHandlePanGesture(panGR: UIPanGestureRecognizer) {
-        if panGR.state == .ended {
-            scrollToInfiniteIndicatorIfNeeded()
+    func triggerInfiniteScrolling() {
+        DispatchQueue.main.async {
+            self.infiniteScrollView?.updateState(updatedValue: .triggered)
+            self.infiniteScrollView?.startAnimating()
         }
     }
-    @objc private func infiniteScrollSetContentOffset(contentOffset: CGPoint) {
-        infiniteScrollSetContentOffset(contentOffset: contentOffset)
-        
-        if infiniteScrollState.initialized {
-            infiniteScrollViewDidScroll(contentOffset: contentOffset)
+
+    var showsInfiniteScrolling: Bool {
+        get {
+            return infiniteScrollView?.isHidden == false
         }
-    }
-    @objc private func infiniteScrollSetContentSize(contentSize: CGSize) {
-        infiniteScrollSetContentSize(contentSize: contentSize)
-        
-        if infiniteScrollState.initialized {
-            positionInfiniteScrollIndicatorWithContentSize(contentSize: contentSize)
-        }
-    }
-    private func clampContentSizeToFitVisibleBounds(contentSize: CGSize) -> Double {
-        let minHeight = Double(bounds.size.height) - Double(contentInset.top) - originalBottomInset()
-        return max(Double(contentSize.height), minHeight)
-    }
-    private func originalBottomInset() -> Double {
-        let inset = Double(contentInset.bottom) - infiniteScrollState.extraBottomInset - infiniteScrollState.indicatorInset
-        return inset
-    }
-    private func callInfiniteScrollHandler() {
-        if let handler = infiniteScrollState.infiniteScrollHandler {
-            handler(self)
-        }
-    }
-    private func getOrCreateActivityIndicatorView() -> UIActivityIndicatorView {
-        var activityIndicator = infiniteScrollIndicatorView()
-        if activityIndicator == nil {
-            activityIndicator = UIActivityIndicatorView(style: infiniteScrollIndicatorStyle())
-            setInfiniteScrollIndicatorView(indicatorView: activityIndicator!)
-        }
-        if activityIndicator!.superview != self {
-            addSubview(activityIndicator!)
-        }
-        return activityIndicator!
-    }
-    private func infiniteIndicatorRowHeight() -> Double {
-        let indicator = getOrCreateActivityIndicatorView()
-        let indicatorHeight = Double(indicator.bounds.size.height)
-        let height = indicatorHeight + infiniteScrollIndicatorMargin() * 2
-        return height
-    }
-    private func positionInfiniteScrollIndicatorWithContentSize(contentSize: CGSize) {
-        let indicator = getOrCreateActivityIndicatorView()
-        let contentHeight = clampContentSizeToFitVisibleBounds(contentSize: contentSize)
-        let indicatorRowHeight = infiniteIndicatorRowHeight()
-        let center = CGPoint(x: contentSize.width * 0.5, y: CGFloat(contentHeight + indicatorRowHeight * 0.5))
-        if !indicator.center.equalTo(center) {
-            indicator.center = center
-        }
-    }
-    private func startAnimatingInfiniteScroll() {
-        let indicator = getOrCreateActivityIndicatorView()
-        
-        positionInfiniteScrollIndicatorWithContentSize(contentSize: contentSize)
-        indicator.isHidden = false
-        indicator.startAnimating()
-        
-        let indicatorInset = infiniteIndicatorRowHeight()
-        var contentInset = self.contentInset
-        contentInset.bottom += CGFloat(indicatorInset)
-        let adjustedContentHeight = clampContentSizeToFitVisibleBounds(contentSize: contentSize)
-        let extraBottomInset = adjustedContentHeight - Double(contentSize.height)
-        contentInset.bottom += CGFloat(extraBottomInset)
-        
-        infiniteScrollState.indicatorInset = indicatorInset
-        infiniteScrollState.extraBottomInset = extraBottomInset
-        infiniteScrollState.loading = true
-        
-        setInfiniteScrollViewContentInset(contentInset: contentInset, animated: true) { (finished) in
-            if finished {
-                self.scrollToInfiniteIndicatorIfNeeded()
+        set {
+            guard let scrollView = infiniteScrollView else {
+                return
             }
-        }
-    }
-    private func stopAnimatingInfiniteScrollWithCompletion(handler: InfiniteScrollHandler?) {
-        let indicator = infiniteScrollIndicatorView()!
-        
-        var insets = self.contentInset
-        insets.bottom -= CGFloat(infiniteScrollState.indicatorInset)
-        insets.bottom -= CGFloat(infiniteScrollState.extraBottomInset)
-        infiniteScrollState.indicatorInset = 0
-        infiniteScrollState.extraBottomInset = 0
-        
-        setInfiniteScrollViewContentInset(contentInset: insets, animated: true) { (finished) in
-            indicator.stopAnimating()
-            indicator.isHidden = true
-            self.infiniteScrollState.loading = false
-            
-            if finished {
-                let newY = self.contentSize.height - (self.bounds.size.height) + self.contentInset.bottom
-                if self.contentOffset.y > newY && newY > 0 {
-                    self.setContentOffset(CGPoint(x: 0, y: newY), animated: true)
+            infiniteScrollView?.isHidden = !showsInfiniteScrolling
+            if showsInfiniteScrolling == false {
+                if scrollView.isObserving == true {
+                    removeObserver(scrollView, forKeyPath: ObserverConstants.contentOffset.rawValue)
+                    removeObserver(scrollView, forKeyPath: ObserverConstants.contentSize.rawValue)
+                    scrollView.resetScrollViewContentInset()
+                    scrollView.isObserving = false
                 }
             }
-            handler?(self)
-        }
-    }
-    private func infiniteScrollViewDidScroll(contentOffset: CGPoint) {
-        let contentHeight = clampContentSizeToFitVisibleBounds(contentSize: contentSize)
-        let actionOffset = contentHeight - Double(bounds.size.height) + originalBottomInset()
-        let hasActualContent = contentSize.height > 1
-        
-        guard hasActualContent else { return }
-        guard isDragging else { return }
-        guard !infiniteScrollState.loading else { return }
-        
-        if contentOffset.y > CGFloat(actionOffset) {
-            startAnimatingInfiniteScroll()
+            else {
+                if scrollView.isObserving == false {
+                    addObserver(scrollView, forKeyPath: ObserverConstants.contentOffset.rawValue, options: .new, context: nil)
+                    addObserver(scrollView, forKeyPath: ObserverConstants.contentSize.rawValue, options: .new, context: nil)
+                    scrollView.scrollViewContentInsetForInfiniteScrolling()
+                    scrollView.isObserving = true
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                self.callInfiniteScrollHandler()
+                    scrollView.setNeedsLayout()
+                    scrollView.frame = CGRect(x: 0.0, y: contentSize.height, width: scrollView.bounds.size.width, height: 60.0)
+                }
             }
         }
     }
-    private func scrollToInfiniteIndicatorIfNeeded() {
-        guard !isDragging else { return }
-        guard infiniteScrollState.loading else { return }
-        
-        let contentHeight = clampContentSizeToFitVisibleBounds(contentSize: contentSize)
-        let indicatorRowHeight = infiniteIndicatorRowHeight()
-        
-        let minY = contentHeight - Double(bounds.size.height) + originalBottomInset()
-        let maxY = minY + indicatorRowHeight
-        
-        if contentOffset.y > CGFloat(minY) && contentOffset.y < CGFloat(maxY) {
-            setContentOffset(CGPoint(x: 0, y: maxY), animated: true)
-        }
-    }
-    private func setInfiniteScrollViewContentInset(contentInset: UIEdgeInsets, animated: Bool, completion: ((Bool)->())?) {
-        let animations = { self.contentInset = contentInset }
-        if animated {
-            UIView.animate(withDuration: infiniteScrollAnimationDuration, delay: 0, options: [.allowUserInteraction, .beginFromCurrentState], animations: animations, completion: completion)
-        } else {
-            UIView.performWithoutAnimation(animations)
-            completion?(true)
-        }
-    }
 }
 
-extension UIScrollView {        //Support
-    class InfiniteScrollState {
-        var initialized = false
-        var loading = false
-        var indicatorView: UIActivityIndicatorView?
-        var indicatorStyle = UIActivityIndicatorView.Style.gray
-        var extraBottomInset = 0.0
-        var indicatorInset = 0.0
-        var indicatorMargin = 11.0
-        var infiniteScrollHandler: InfiniteScrollHandler?
-        
-        init() { }
-    }
-    func associatedObject<ValueType: AnyObject>(base: AnyObject, key: UnsafePointer<UInt8>, initialiser: () -> ValueType) -> ValueType {
-        if let associated = objc_getAssociatedObject(base, key) as? ValueType { return associated }
-        let associated = initialiser()
-        objc_setAssociatedObject(base, key, associated, .OBJC_ASSOCIATION_RETAIN)
-        return associated
-    }
-    func associateObject<ValueType: AnyObject>(base: AnyObject, key: UnsafePointer<UInt8>, value: ValueType) {
-        objc_setAssociatedObject(base, key, value, .OBJC_ASSOCIATION_RETAIN)
-    }
-    typealias InfiniteScrollHandler = (UIScrollView)->()
+enum InfiniteScrollState {
+    case stopped
+    case triggered
+    case loading
+    case all
 }
- 
-*/
+
+enum ObserverConstants: String {
+    case contentSize
+    case contentOffset
+    case uiScrollViewInfiniteScrollView
+}
+
+class InfiniteScrollView: UIView {
+    var enabled = true
+    var isObserving = false
+    weak var scrollView: UIScrollView?
+    var originalBottomInset: CGFloat = 0.0
+    var infiniteScrollingHandler: (() -> Void)?
+
+    lazy private var activityIndicatorView: UIActivityIndicatorView = {
+        let indicatorView = UIActivityIndicatorView(style: .gray)
+        indicatorView.hidesWhenStopped = true
+        addSubview(indicatorView)
+        return indicatorView
+    }()
+
+    private var state: InfiniteScrollState = .stopped
+
+    // MARK: - Inits
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        activityIndicatorView.stopAnimating()
+        autoresizingMask = .flexibleWidth
+    }
+
+
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    // MARK: - Public functions
+
+    func triggerRefresh() {
+        DispatchQueue.main.async {
+            self.updateState(updatedValue: .triggered)
+            self.updateState(updatedValue: .loading)
+        }
+    }
+
+    func startAnimating() {
+        DispatchQueue.main.async {
+            self.updateState(updatedValue: .loading)
+        }
+    }
+
+    func stopAnimating() {
+        DispatchQueue.main.async {
+            self.updateState(updatedValue: .stopped)
+        }
+    }
+
+    // MARK: - View functions
+
+    override func willMove(toSuperview newSuperview: UIView?) {
+        if superview != nil && newSuperview == nil {
+            if let scrollView = superview as? UIScrollView {
+                if scrollView.showsInfiniteScrolling {
+                    if isObserving {
+                        scrollView.removeObserver(self, forKeyPath: ObserverConstants.contentOffset.rawValue)
+                        scrollView.removeObserver(self, forKeyPath: ObserverConstants.contentSize.rawValue)
+                        isObserving = false
+                    }
+                }
+            }
+        }
+    }
+
+    override func layoutSubviews() {
+        activityIndicatorView.center = CGPoint(x: bounds.size.width/2, y: bounds.size.height/2)
+    }
+
+    // MARK: - ScrollView Insets
+
+    func resetScrollViewContentInset() {
+        var currentInsets = scrollView?.contentInset
+        currentInsets?.bottom = originalBottomInset
+        scrollViewContentInset(contentInset: currentInsets ?? .zero)
+    }
+
+    func scrollViewContentInsetForInfiniteScrolling() {
+        var currentInsets = scrollView?.contentInset
+        currentInsets?.bottom = originalBottomInset + 60
+        scrollViewContentInset(contentInset: currentInsets ?? .zero)
+    }
+
+    func scrollViewContentInset(contentInset: UIEdgeInsets) {
+        UIView.animate(withDuration: 0.3,
+                       delay: 0.0,
+                       options: [.allowUserInteraction, .beginFromCurrentState],
+                       animations: {
+                        self.scrollView?.contentInset = contentInset
+        })
+    }
+
+    // MARK: - Observers
+
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        guard let keyPath = keyPath, let contentOffset: CGPoint = change?[.newKey] as? CGPoint else {
+            return
+        }
+        if keyPath == ObserverConstants.contentOffset.rawValue && enabled == true {
+            scrollViewDidScroll(contentOffset: contentOffset)
+        }
+        else if keyPath == ObserverConstants.contentSize.rawValue {
+            layoutSubviews()
+            frame = CGRect(x: 0.0, y: scrollView?.contentSize.height ?? 0.0, width: bounds.size.width, height: 60.0)
+        }
+        
+    }
+
+    func scrollViewDidScroll(contentOffset: CGPoint) {
+        guard let scrollView = scrollView else {
+            return
+        }
+        if state != .loading && enabled == true {
+            let contentHeight = scrollView.contentSize.height
+            let offsetThreshold = contentHeight - scrollView.bounds.size.height
+
+            if !scrollView.isDragging && state == .triggered {
+                DispatchQueue.main.async {
+                    self.updateState(updatedValue: .loading)
+                }
+            }
+            else if contentOffset.y > offsetThreshold && contentOffset.y > 0 && state == .stopped && scrollView.isDragging {
+                DispatchQueue.main.async {
+                    self.updateState(updatedValue: .triggered)
+                }
+            }
+            else if contentOffset.y < offsetThreshold && state != .stopped {
+                DispatchQueue.main.async {
+                    self.updateState(updatedValue: .stopped)
+                }
+            }
+        }
+    }
+
+    // MARK: - Helpers
+
+    func updateState(updatedValue: InfiniteScrollState) {
+        if updatedValue == state {
+            return
+        }
+        let previousState = state
+        state = updatedValue
+        let viewBounds = activityIndicatorView.bounds
+        let origin = CGPoint(x: round((bounds.size.width - viewBounds.size.width)/2),
+                             y: round((bounds.size.height - viewBounds.size.height)/2))
+        let yCoordinate = scrollView?.contentSize.height ?? 0.0
+        activityIndicatorView.frame = CGRect(x: origin.x, y: yCoordinate, width: viewBounds.size.width, height: viewBounds.size.height)
+        switch updatedValue {
+        case .stopped:
+            self.activityIndicatorView.stopAnimating()
+        case .loading:
+            self.activityIndicatorView.startAnimating()
+        default:
+            break
+        }
+
+        if previousState == .triggered && updatedValue == .loading && infiniteScrollingHandler != nil && enabled {
+            infiniteScrollingHandler?()
+        }
+    }
+
+}
